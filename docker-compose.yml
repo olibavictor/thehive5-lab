@@ -4,7 +4,6 @@ services:
     container_name: cassandra
     hostname: cassandra
     restart: unless-stopped
-    user: ${UID}:${GID}
     environment:
       - CASSANDRA_CLUSTER_NAME=TheHive
       - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
@@ -42,7 +41,6 @@ services:
     container_name: elasticsearch
     hostname: elasticsearch
     restart: unless-stopped
-    user: ${UID}:0
     environment:
       - http.host=0.0.0.0
       - discovery.type=single-node
@@ -51,8 +49,8 @@ services:
       - thread_pool.write.queue_size=100000
       - bootstrap.memory_lock=true
       - xpack.security.enabled=true
-      - ELASTIC_PASSWORD=${elasticsearch_password} # Password for "elastic" default user
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - ELASTIC_PASSWORD=elasticpass # Password for "elastic" default user
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     volumes:
       - esdata:/usr/share/elasticsearch/data
       - eslogs:/usr/share/elasticsearch/logs
@@ -63,12 +61,12 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
-    memswap_limit: 512M
+          memory: 1G
+    memswap_limit: 1G
     networks:
       - thehive-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f -s -u 'elastic:${elasticsearch_password}' http://elasticsearch:9200/_cat/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f -s -u 'elastic:elasticpass' http://elasticsearch:9200/_cat/health || exit 1"]
       start_period: 40s
       interval: 2s
       timeout: 1s
@@ -86,8 +84,6 @@ services:
     container_name: thehive
     hostname: thehive
     restart: unless-stopped
-    #command: '--no-config --no-config-secret'
-    user: ${UID}:${GID}
     environment:
       - |
         JAVA_OPTS=
